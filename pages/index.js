@@ -5,6 +5,7 @@ import Link from "next/link";
 export default function HomePage() {
   const [validToken, setValidToken] = useState(false);
   const [checkingToken, setCheckingToken] = useState(true);
+  const [timer, setTimer] = useState(15); // 15 seconds countdown
   const router = useRouter();
 
   // Function to check token validity
@@ -30,7 +31,6 @@ export default function HomePage() {
   useEffect(() => {
     checkTokenValidity(); // Check token validity on mount
 
-    // Listen for changes to localStorage in case it's updated from another page
     const handleStorageChange = () => {
       checkTokenValidity();
     };
@@ -39,6 +39,24 @@ export default function HomePage() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []); // Empty dependency array means it runs only on mount
 
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prevTimer) => prevTimer - 1);
+      }, 1000);
+    } else {
+      setValidToken(true); // Enable "Visit HomePage" button after timer ends
+    }
+
+    return () => clearInterval(interval); // Cleanup interval
+  }, [timer]);
+
+  const handleVerifyClick = () => {
+    router.push("/verify"); // Redirect to verify.js
+    setTimer(15); // Start the timer when "Verify Now" button is clicked
+  };
+
   return (
     <div className="container">
       {checkingToken ? (
@@ -46,9 +64,12 @@ export default function HomePage() {
       ) : (
         <>
           {!validToken && (
-            <button onClick={() => router.push("/verify")} className="verifyButton">
-              Verify Now
-            </button>
+            <>
+              <button onClick={handleVerifyClick} className="verifyButton">
+                Verify Now
+              </button>
+              {timer > 0 && <p>Time left: {timer} seconds</p>}
+            </>
           )}
 
           {validToken && (
