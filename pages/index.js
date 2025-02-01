@@ -6,6 +6,7 @@ export default function HomePage() {
   const [validToken, setValidToken] = useState(false);
   const [checkingToken, setCheckingToken] = useState(true);
   const [timer, setTimer] = useState(15); // 15 seconds countdown
+  const [isVerifying, setIsVerifying] = useState(false); // To track button click and start timer
   const router = useRouter();
 
   // Function to check token validity
@@ -41,19 +42,19 @@ export default function HomePage() {
 
   useEffect(() => {
     let interval;
-    if (timer > 0) {
+    if (isVerifying && timer > 0) {
       interval = setInterval(() => {
         setTimer((prevTimer) => prevTimer - 1);
       }, 1000);
-    } else {
+    } else if (timer === 0) {
       setValidToken(true); // Enable "Visit HomePage" button after timer ends
     }
 
     return () => clearInterval(interval); // Cleanup interval
-  }, [timer]);
+  }, [isVerifying, timer]);
 
   const handleVerifyClick = () => {
-    setTimer(15); // Start the timer when "Verify Now" button is clicked
+    setIsVerifying(true); // Set to true to start the timer
     router.push("/verify"); // Redirect to verify.js immediately
   };
 
@@ -68,7 +69,7 @@ export default function HomePage() {
               <button onClick={handleVerifyClick} className="verifyButton">
                 Verify Now
               </button>
-              {timer > 0 && <p>Time left: {timer} seconds</p>}
+              {isVerifying && timer > 0 && <p>Time left: {timer} seconds</p>}
             </>
           )}
 
