@@ -46,7 +46,7 @@ export default function HomePage() {
       ) : (
         <>
           {!validToken && (
-            <button onClick={() => router.push("/verify")} className="verifyButton">
+            <button onClick={() => router.push("/verification-success")} className="verifyButton">
               Verify Now
             </button>
           )}
