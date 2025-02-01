@@ -28,16 +28,16 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    checkTokenValidity(); // Check on mount
+    checkTokenValidity(); // Check token validity on mount
 
-    // Listen for storage changes (for when `validToken` updates in verification-success.js)
+    // Listen for changes to localStorage in case it's updated from another page
     const handleStorageChange = () => {
       checkTokenValidity();
     };
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  }, []); // Empty dependency array means it runs only on mount
 
   return (
     <div className="container">
