@@ -53,8 +53,8 @@ export default function HomePage() {
   }, [timer]);
 
   const handleVerifyClick = () => {
-    router.push("/verify"); // Redirect to verify.js
     setTimer(15); // Start the timer when "Verify Now" button is clicked
+    router.push("/verify"); // Redirect to verify.js immediately
   };
 
   return (
