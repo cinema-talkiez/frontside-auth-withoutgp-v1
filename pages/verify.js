@@ -6,31 +6,31 @@ export default function VerifyPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
+const handleVerification = async () => {
+  setIsVerifying(true);
+  setErrorMessage("");
 
-  const handleVerification = async () => {
-    setIsVerifying(true);
-    setErrorMessage("");
+  const apiToken = "e5bf7301b4ad442d45481de99fd656a182ec6507";
+  const callbackUrl = "https://injured-harriet-cinema-talkies-87f4a1d2.koyeb.app/verification-success/";  // Your success page
+  const apiUrl = `https://api.gplinks.com/api?api=${apiToken}&url=${encodeURIComponent(callbackUrl)}`;
 
-    // Replace with your actual GPLinks API token and callback URL
-    const apiToken = "e5bf7301b4ad442d45481de99fd656a182ec6507";
-    const callbackUrl = "https://injured-harriet-cinema-talkies-87f4a1d2.koyeb.app/verification-success/";
-    const apiUrl = `https://api.gplinks.com/api?api=${apiToken}&url=${encodeURIComponent(callbackUrl)}`;
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    const result = await response.json();
 
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-      const result = await response.json();
-
-      if (result.status === "success" && result.shortenedUrl) {
-        window.location.href = result.shortenedUrl; // Redirect to GPLinks verification page
-      } else {
-        throw new Error(result.message || "Verification failed.");
-      }
-    } catch (error) {
-      setErrorMessage(error.message || "An error occurred.");
-      setIsVerifying(false);
+    if (result.status === "success" && result.shortenedUrl) {
+      // Open the verification link in a new tab
+      window.open(result.shortenedUrl, '_blank');
+    } else {
+      throw new Error(result.message || "Verification failed.");
     }
-  };
+  } catch (error) {
+    setErrorMessage(error.message || "An error occurred.");
+    setIsVerifying(false);
+  }
+};
+
 
   return (
     <div className="verificationContainer">
