@@ -45,9 +45,11 @@ export default function HomePage() {
     if (isVerifying && timer > 0) {
       interval = setInterval(() => {
         setTimer((prevTimer) => prevTimer - 1);
+        localStorage.setItem("timer", timer - 1); // Save the current timer value to localStorage
       }, 1000);
     } else if (timer === 0) {
       setValidToken(true); // Enable "Visit HomePage" button after timer ends
+      localStorage.removeItem("timer"); // Clear timer after expiration
     }
 
     return () => clearInterval(interval); // Cleanup interval
@@ -55,6 +57,7 @@ export default function HomePage() {
 
   const handleVerifyClick = () => {
     setIsVerifying(true); // Set to true to start the timer
+    localStorage.setItem("timer", timer); // Save the initial timer value to localStorage
     router.push("/verify"); // Redirect to verify.js immediately
   };
 
