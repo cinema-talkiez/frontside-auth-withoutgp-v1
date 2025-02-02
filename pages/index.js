@@ -30,6 +30,7 @@ export default function HomePage() {
         setTimeLeft(remainingTime);
       } else {
         sessionStorage.removeItem("timer");
+        setButtonEnabled(true); // Enable button if timer is already expired
       }
     } else {
       // Start the timer if it doesn't exist
@@ -53,9 +54,10 @@ export default function HomePage() {
             sessionStorage.setItem("validToken", "true");
             sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
             sessionStorage.removeItem("timer");
-            setButtonEnabled(true); // Enable button after 15 sec
+            setButtonEnabled(true); // Ensure button enables after 15s
             return null;
           }
+          sessionStorage.setItem("timer", Math.floor(Date.now() / 1000) + prev - 1); // Keep session updated
           return prev - 1;
         });
       }, 1000);
