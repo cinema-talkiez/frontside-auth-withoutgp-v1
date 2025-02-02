@@ -8,13 +8,15 @@ export default function HomePage() {
   const [timeLeft, setTimeLeft] = useState(null);
   const router = useRouter();
 
+  // Check token & timer on mount
   useEffect(() => {
     const storedValidToken = sessionStorage.getItem("validToken");
     const storedExpirationTime = sessionStorage.getItem("validTokenExpiration");
     const storedTimer = sessionStorage.getItem("timer");
 
+    // Validate token
     if (storedValidToken === "true" && storedExpirationTime) {
-      if (Date.now() < parseInt(storedExpirationTime)) {
+      if (Date.now() < parseInt(storedExpirationTime, 10)) {
         setValidToken(true);
       } else {
         sessionStorage.removeItem("validToken");
@@ -23,8 +25,9 @@ export default function HomePage() {
       }
     }
 
+    // Restore timer if it exists
     if (storedTimer) {
-      const remainingTime = parseInt(storedTimer) - Math.floor(Date.now() / 1000);
+      const remainingTime = parseInt(storedTimer, 10) - Math.floor(Date.now() / 1000);
       if (remainingTime > 0) {
         setTimeLeft(remainingTime);
       } else {
@@ -35,38 +38,40 @@ export default function HomePage() {
     setCheckingToken(false);
   }, []);
 
+  // Timer countdown effect
   useEffect(() => {
-    let interval;
-    if (timeLeft !== null && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setValidToken(true);
-            sessionStorage.setItem("validToken", "true");
-            sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
-            sessionStorage.removeItem("timer");
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    if (timeLeft === null || timeLeft <= 0) return;
 
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          sessionStorage.removeItem("timer");
+
+          // Grant validToken after countdown ends
+          setValidToken(true);
+          sessionStorage.setItem("validToken", "true");
+          sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, [timeLeft]);
 
+  // Handle "Verify Now" click
   const handleVerifyClick = () => {
-    router.push("/verify");
-    if (!timeLeft) {
+    if (!sessionStorage.getItem("timer")) {
       const countdownTime = 15;
       const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
 
-      sessionStorage.setItem("timer", expirationTimestamp); // Store timer in sessionStorage
+      sessionStorage.setItem("timer", expirationTimestamp);
       setTimeLeft(countdownTime);
     }
 
-     // Ensure redirection happens instantly
+    router.push("/verify"); // Redirect instantly
   };
 
   return (
@@ -77,11 +82,9 @@ export default function HomePage() {
         <>
           {!validToken && (
             <>
-             <Link href="/verify">
               <button onClick={handleVerifyClick} className="verifyButton">
                 Verify Now
               </button>
-             </Link>
               {timeLeft !== null && timeLeft > 0 && <p>Time left: {timeLeft} seconds</p>}
             </>
           )}
