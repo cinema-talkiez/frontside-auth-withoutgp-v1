@@ -5,12 +5,13 @@ import Link from "next/link";
 export default function HomePage() {
   const [validToken, setValidToken] = useState(false);
   const [checkingToken, setCheckingToken] = useState(true);
-  const [timer, setTimer] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     const storedValidToken = sessionStorage.getItem("validToken");
     const storedExpirationTime = sessionStorage.getItem("validTokenExpiration");
+    const storedTimer = sessionStorage.getItem("timer");
 
     if (storedValidToken === "true" && storedExpirationTime) {
       if (Date.now() < parseInt(storedExpirationTime)) {
@@ -21,19 +22,28 @@ export default function HomePage() {
         setValidToken(false);
       }
     }
+
+    if (storedTimer) {
+      const remainingTime = parseInt(storedTimer) - Math.floor(Date.now() / 1000);
+      if (remainingTime > 0) {
+        setTimeLeft(remainingTime);
+      }
+    }
+
     setCheckingToken(false);
   }, []);
 
   useEffect(() => {
     let interval;
-    if (timer !== null && timer > 0) {
+    if (timeLeft !== null && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimer((prev) => {
+        setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(interval);
             setValidToken(true);
             sessionStorage.setItem("validToken", "true");
             sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
+            sessionStorage.removeItem("timer");
             return null;
           }
           return prev - 1;
@@ -42,15 +52,16 @@ export default function HomePage() {
     }
 
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [timeLeft]);
 
   const handleVerifyClick = () => {
-    setTimer(15); // Start timer
+    const countdownTime = 15; // Set timer for 15 seconds
+    const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
 
-    // Delay navigation slightly to ensure timer starts properly
-    setTimeout(() => {
-      router.push("/verify");
-    }, 100);
+    sessionStorage.setItem("timer", expirationTimestamp); // Store timer in sessionStorage
+    setTimeLeft(countdownTime);
+
+    router.push("/verify"); // Redirect instantly
   };
 
   return (
@@ -64,7 +75,7 @@ export default function HomePage() {
               <button onClick={handleVerifyClick} className="verifyButton">
                 Verify Now
               </button>
-              {timer !== null && timer > 0 && <p>Time left: {timer} seconds</p>}
+              {timeLeft !== null && timeLeft > 0 && <p>Time left: {timeLeft} seconds</p>}
             </>
           )}
 
