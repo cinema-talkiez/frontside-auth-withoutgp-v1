@@ -1,81 +1,53 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
+import { FcApproval } from "react-icons/fc";
 
-export default function HomePage() {
-  const [validToken, setValidToken] = useState(false);
-  const [checkingToken, setCheckingToken] = useState(true);
-  const [timer, setTimer] = useState(null);
+export default function VerifyPage() {
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
-  // Function to check token validity
-  const checkTokenValidity = () => {
-    const storedValidToken = sessionStorage.getItem("validToken");
-    const storedExpirationTime = sessionStorage.getItem("validTokenExpiration");
+  const handleVerification = async () => {
+    setIsVerifying(true);
+    setErrorMessage("");
 
-    if (storedValidToken === "true" && storedExpirationTime) {
-      if (Date.now() < parseInt(storedExpirationTime)) {
-        setValidToken(true);
+    // Replace with your actual GPLinks API token and callback URL
+    const apiToken = "e5bf7301b4ad442d45481de99fd656a182ec6507";
+    const callbackUrl = "https://injured-harriet-cinema-talkies-87f4a1d2.koyeb.app/verification-success/"; // The URL where verification success will occur
+    const apiUrl = `https://api.gplinks.com/api?api=${apiToken}&url=${encodeURIComponent(callbackUrl)}`;
+
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+      const result = await response.json();
+
+      if (result.status === "success" && result.shortenedUrl) {
+        // Open the verification URL in a new tab
+        window.open(result.shortenedUrl, "_blank");
       } else {
-        sessionStorage.removeItem("validToken");
-        sessionStorage.removeItem("validTokenExpiration");
-        setValidToken(false);
+        throw new Error(result.message || "Verification failed.");
       }
+    } catch (error) {
+      setErrorMessage(error.message || "An error occurred.");
+      setIsVerifying(false);
     }
-    setCheckingToken(false);
-  };
-
-  useEffect(() => {
-    checkTokenValidity();
-  }, []);
-
-  useEffect(() => {
-    let interval;
-    if (timer !== null && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setValidToken(true);
-            sessionStorage.setItem("validToken", "true");
-            sessionStorage.setItem("validTokenExpiration", Date.now() + 60000); // Token expires in 1 min
-            return null; // Stop timer
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => clearInterval(interval);
-  }, [timer]);
-
-  const handleVerifyClick = () => {
-    setTimer(15);
-    router.push("/verify"); // Redirect to verify page
   };
 
   return (
-    <div className="container">
-      {checkingToken ? (
-        <p>Checking token...</p>
-      ) : (
-        <>
-          {!validToken && (
-            <>
-              <button onClick={handleVerifyClick} className="verifyButton">
-                Verify Now
-              </button>
-              {timer !== null && timer > 0 && <p>Time left: {timer} seconds</p>}
-            </>
-          )}
+    <div className="verificationContainer">
+      <div className="verificationBox">
+        <h2>Verify Your Access</h2>
+        <p>Click the button below to verify yourself and gain access.</p>
 
-          {validToken && (
-            <Link href="/index1">
-              <button className="visitButton">Visit HomePage</button>
-            </Link>
-          )}
-        </>
-      )}
+        {errorMessage && <p className="error">{errorMessage}</p>}
+
+        <button onClick={handleVerification} disabled={isVerifying} className="verifyButton">
+          <FcApproval className="icon1" />
+          {isVerifying ? "Verifying..." : "Verify Now"}
+        </button>
+
+        <p>After verification, you will be redirected back automatically.</p>
+      </div>
     </div>
   );
 }
