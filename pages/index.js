@@ -9,37 +9,20 @@ export default function HomePage() {
   const router = useRouter();
 
   // Function to check token validity
-  const checkTokenValidity = () => {
-    const storedValidToken = localStorage.getItem("validToken");
-    const storedExpirationTime = localStorage.getItem("validTokenExpiration");
-    const storedTimer = localStorage.getItem("timer");
+  useEffect(() => {
+    const storedValidToken = sessionStorage.getItem("validToken");
+    const storedExpirationTime = sessionStorage.getItem("validTokenExpiration");
 
     if (storedValidToken === "true" && storedExpirationTime) {
       if (Date.now() < parseInt(storedExpirationTime)) {
         setValidToken(true);
       } else {
-        localStorage.removeItem("validToken");
-        localStorage.removeItem("validTokenExpiration");
+        sessionStorage.removeItem("validToken");
+        sessionStorage.removeItem("validTokenExpiration");
         setValidToken(false);
       }
     }
-
-    if (storedTimer) {
-      setTimer(parseInt(storedTimer));
-    }
-
     setCheckingToken(false);
-  };
-
-  useEffect(() => {
-    checkTokenValidity();
-
-    const handleStorageChange = () => {
-      checkTokenValidity();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -47,25 +30,24 @@ export default function HomePage() {
     if (timer !== null && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => {
-          const newTime = prev - 1;
-          localStorage.setItem("timer", newTime);
-          return newTime;
+          if (prev <= 1) {
+            clearInterval(interval);
+            setValidToken(true);
+            sessionStorage.setItem("validToken", "true");
+            sessionStorage.setItem("validTokenExpiration", Date.now() + 60000); // Valid for 1 min
+            return null;
+          }
+          return prev - 1;
         });
       }, 1000);
-    } else if (timer === 0) {
-      setValidToken(true);
-      localStorage.setItem("validToken", "true");
-      localStorage.setItem("validTokenExpiration", Date.now() + 60000); // Set token expiry (1 min for demo)
-      localStorage.removeItem("timer");
     }
 
     return () => clearInterval(interval);
   }, [timer]);
 
   const handleVerifyClick = () => {
-    localStorage.setItem("timer", 15);
-    setTimer(15);
-    router.push("/verify"); // Redirect to verify.js
+    setTimer(15); // Start timer
+    router.push("/verify"); // Redirect to verify page
   };
 
   return (
