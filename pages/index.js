@@ -76,10 +76,7 @@ export default function HomePage() {
         <>
           {!validToken && (
             <>
-              <button className="verifyButton" disabled>
-                Verify Now
-              </button>
-              {timeLeft !== null && timeLeft > 0 && <p>Time left: {timeLeft} seconds</p>}
+              <p>Please wait, redirecting to verification in {timeLeft} seconds...</p>
             </>
           )}
 
