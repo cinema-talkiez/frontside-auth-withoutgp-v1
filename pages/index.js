@@ -77,9 +77,11 @@ export default function HomePage() {
         <>
           {!validToken && (
             <>
+             <Link href="/verify">
               <button onClick={handleVerifyClick} className="verifyButton">
                 Verify Now
               </button>
+             </Link>
               {timeLeft !== null && timeLeft > 0 && <p>Time left: {timeLeft} seconds</p>}
             </>
           )}
