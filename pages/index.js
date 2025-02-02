@@ -57,6 +57,7 @@ export default function HomePage() {
   }, [timeLeft]);
 
   const handleVerifyClick = () => {
+    router.push("/verify");
     if (!timeLeft) {
       const countdownTime = 15;
       const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
@@ -65,7 +66,7 @@ export default function HomePage() {
       setTimeLeft(countdownTime);
     }
 
-    router.push("/verify"); // Ensure redirection happens instantly
+     // Ensure redirection happens instantly
   };
 
   return (
