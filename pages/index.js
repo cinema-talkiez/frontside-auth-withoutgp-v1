@@ -8,7 +8,6 @@ export default function HomePage() {
   const [timer, setTimer] = useState(null);
   const router = useRouter();
 
-  // Function to check token validity
   useEffect(() => {
     const storedValidToken = sessionStorage.getItem("validToken");
     const storedExpirationTime = sessionStorage.getItem("validTokenExpiration");
@@ -34,7 +33,7 @@ export default function HomePage() {
             clearInterval(interval);
             setValidToken(true);
             sessionStorage.setItem("validToken", "true");
-            sessionStorage.setItem("validTokenExpiration", Date.now() + 60000); // Valid for 1 min
+            sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
             return null;
           }
           return prev - 1;
@@ -47,7 +46,11 @@ export default function HomePage() {
 
   const handleVerifyClick = () => {
     setTimer(15); // Start timer
-    router.push("/verify"); // Redirect to verify page
+
+    // Delay navigation slightly to ensure timer starts properly
+    setTimeout(() => {
+      router.push("/verify");
+    }, 100);
   };
 
   return (
