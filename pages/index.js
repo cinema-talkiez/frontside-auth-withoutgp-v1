@@ -6,6 +6,7 @@ export default function HomePage() {
   const [validToken, setValidToken] = useState(false);
   const [checkingToken, setCheckingToken] = useState(true);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function HomePage() {
             sessionStorage.setItem("validToken", "true");
             sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
             sessionStorage.removeItem("timer");
+            setButtonEnabled(true); // Enable button after 15 sec
             return null;
           }
           return prev - 1;
@@ -74,15 +76,13 @@ export default function HomePage() {
         <p>Checking token...</p>
       ) : (
         <>
-          {!validToken && (
-            <>
-              <p>Please wait, redirecting to verification in {timeLeft} seconds...</p>
-            </>
-          )}
+          {!validToken && <p>Please wait, redirecting to verification in {timeLeft} seconds...</p>}
 
           {validToken && (
             <Link href="/index1">
-              <button className="visitButton">Visit HomePage</button>
+              <button className="visitButton" disabled={!buttonEnabled}>
+                Visit HomePage
+              </button>
             </Link>
           )}
         </>
