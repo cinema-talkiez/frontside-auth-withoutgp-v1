@@ -8,7 +8,7 @@ export default function HomePage() {
   const [timeLeft, setTimeLeft] = useState(null);
   const router = useRouter();
 
-  // Check token & timer on mount
+  // Initialize timer & check token when the app loads
   useEffect(() => {
     const storedValidToken = sessionStorage.getItem("validToken");
     const storedExpirationTime = sessionStorage.getItem("validTokenExpiration");
@@ -25,8 +25,15 @@ export default function HomePage() {
       }
     }
 
-    // Restore timer if it exists
-    if (storedTimer) {
+    // Start timer automatically if it doesn't exist
+    if (!storedTimer) {
+      const countdownTime = 15;
+      const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
+
+      sessionStorage.setItem("timer", expirationTimestamp);
+      setTimeLeft(countdownTime);
+    } else {
+      // Restore existing timer
       const remainingTime = parseInt(storedTimer, 10) - Math.floor(Date.now() / 1000);
       if (remainingTime > 0) {
         setTimeLeft(remainingTime);
@@ -44,6 +51,10 @@ export default function HomePage() {
 
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
+        if (prev === 6) {
+          router.push("/verify"); // Redirect to verify.js when 5 seconds left
+        }
+
         if (prev <= 1) {
           clearInterval(interval);
           sessionStorage.removeItem("timer");
@@ -59,20 +70,7 @@ export default function HomePage() {
     }, 1000);
 
     return () => clearInterval(interval); // Cleanup interval on unmount
-  }, [timeLeft]);
-
-  // Handle "Verify Now" click
-  const handleVerifyClick = () => {
-    if (!sessionStorage.getItem("timer")) {
-      const countdownTime = 15;
-      const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
-
-      sessionStorage.setItem("timer", expirationTimestamp);
-      setTimeLeft(countdownTime);
-    }
-
-    router.push("/verify"); // Redirect instantly
-  };
+  }, [timeLeft, router]);
 
   return (
     <div className="container">
@@ -82,9 +80,7 @@ export default function HomePage() {
         <>
           {!validToken && (
             <>
-              <button onClick={handleVerifyClick} className="verifyButton">
-                Verify Now
-              </button>
+              <p>Timer started automatically!</p>
               {timeLeft !== null && timeLeft > 0 && <p>Time left: {timeLeft} seconds</p>}
             </>
           )}
