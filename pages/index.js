@@ -27,6 +27,8 @@ export default function HomePage() {
       const remainingTime = parseInt(storedTimer) - Math.floor(Date.now() / 1000);
       if (remainingTime > 0) {
         setTimeLeft(remainingTime);
+      } else {
+        sessionStorage.removeItem("timer");
       }
     }
 
@@ -55,13 +57,15 @@ export default function HomePage() {
   }, [timeLeft]);
 
   const handleVerifyClick = () => {
-    const countdownTime = 15; // Set timer for 15 seconds
-    const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
+    if (!timeLeft) {
+      const countdownTime = 15;
+      const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
 
-    sessionStorage.setItem("timer", expirationTimestamp); // Store timer in sessionStorage
-    setTimeLeft(countdownTime);
+      sessionStorage.setItem("timer", expirationTimestamp); // Store timer in sessionStorage
+      setTimeLeft(countdownTime);
+    }
 
-    router.push("/verify"); // Redirect instantly
+    router.push("/verify"); // Ensure redirection happens instantly
   };
 
   return (
