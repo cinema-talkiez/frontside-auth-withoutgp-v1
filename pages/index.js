@@ -8,10 +8,10 @@ export default function HomePage() {
   const [timer, setTimer] = useState(null);
   const router = useRouter();
 
-  // Function to check token validity
   const checkTokenValidity = () => {
     const storedValidToken = localStorage.getItem("validToken");
     const storedExpirationTime = localStorage.getItem("validTokenExpiration");
+    const storedTimer = localStorage.getItem("timer");
 
     if (storedValidToken === "true" && storedExpirationTime) {
       if (Date.now() < parseInt(storedExpirationTime)) {
@@ -23,47 +23,50 @@ export default function HomePage() {
       }
     }
 
+    if (storedTimer) {
+      setTimer(parseInt(storedTimer));
+    }
+
     setCheckingToken(false);
   };
 
   useEffect(() => {
     checkTokenValidity();
+
+    const handleStorageChange = () => {
+      checkTokenValidity();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
     let interval;
-
     if (timer !== null && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => {
-          if (prev > 1) {
-            return prev - 1;
-          } else {
-            clearInterval(interval);
-            setValidToken(true);
-            localStorage.setItem("validToken", "true");
-            localStorage.setItem("validTokenExpiration", Date.now() + 60000); // 1 min expiry
-            return 0;
-          }
+          const newTime = prev - 1;
+          localStorage.setItem("timer", newTime);
+          return newTime;
         });
       }, 1000);
+    } else if (timer === 0) {
+      setValidToken(true);
+      localStorage.setItem("validToken", "true");
+      localStorage.setItem("validTokenExpiration", Date.now() + 60000);
+      localStorage.removeItem("timer");
     }
 
     return () => clearInterval(interval);
   }, [timer]);
 
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      setTimer(null); // Stop the timer when the app closes
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, []);
-
   const handleVerifyClick = () => {
-    setTimer(15); // Always start from 15 seconds
-    router.push("/verify"); // Redirect to verify.js
+    if (!localStorage.getItem("timer")) {
+      localStorage.setItem("timer", 15);
+      setTimer(15);
+    }
+    router.push("/verify");
   };
 
   return (
