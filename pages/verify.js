@@ -1,29 +1,38 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
-export default function VerifyPage() {
-  const [timer, setTimer] = useState(15);
+export default function HomePage() {
+  const [verified, setVerified] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    let interval = setInterval(() => {
-      setTimer((prev) => prev - 1);
-    }, 1000);
+    // Function to check if verification is complete
+    const checkVerification = () => {
+      if (localStorage.getItem("verificationComplete") === "true") {
+        setVerified(true);
+      }
+    };
 
-    // After 15 sec, mark verification as complete
-    setTimeout(() => {
-      localStorage.setItem("verificationComplete", "true");
-      clearInterval(interval);
-    }, 15000);
+    // Run the check on initial load
+    checkVerification();
 
-    return () => clearInterval(interval);
+    // Re-check when localStorage changes
+    window.addEventListener("storage", checkVerification);
+
+    // Cleanup listener on component unmount
+    return () => window.removeEventListener("storage", checkVerification);
   }, []);
 
   return (
     <div>
-      <h1>Verification Page</h1>
-      <p>Stay on this page for {timer} seconds to complete verification.</p>
-      <button onClick={() => router.push("/")}>Go Back</button>
+      {!verified ? (
+        <button onClick={() => router.push("/verify")}>Verify Now</button>
+      ) : (
+        <Link href="/index1">
+          <button>Visit HomePage</button>
+        </Link>
+      )}
     </div>
   );
 }
