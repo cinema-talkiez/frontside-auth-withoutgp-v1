@@ -7,16 +7,20 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if verification was completed
+    // Function to check if verification is complete
     const checkVerification = () => {
       if (localStorage.getItem("verificationComplete") === "true") {
         setVerified(true);
       }
     };
 
+    // Run the check on initial load
     checkVerification();
+
+    // Re-check when localStorage changes
     window.addEventListener("storage", checkVerification);
 
+    // Cleanup listener on component unmount
     return () => window.removeEventListener("storage", checkVerification);
   }, []);
 
