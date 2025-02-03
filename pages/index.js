@@ -28,13 +28,6 @@ export default function HomePage() {
 
   useEffect(() => {
     checkTokenValidity();
-
-    const handleStorageChange = () => {
-      checkTokenValidity();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -84,7 +77,11 @@ export default function HomePage() {
               <button onClick={handleVerifyClick} className="verifyButton">
                 Verify Now
               </button>
-              {timer !== null && timer > 0 && <p>Time left: {timer} seconds</p>}
+              {timer !== null && timer > 0 && (
+                <p style={{ fontSize: "20px", fontWeight: "bold", color: "red" }}>
+                  Time left: {timer} seconds
+                </p>
+              )}
             </>
           )}
 
