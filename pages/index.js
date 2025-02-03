@@ -17,6 +17,7 @@ export default function HomePage() {
     if (storedValidToken === "true" && storedExpirationTime) {
       if (Date.now() < parseInt(storedExpirationTime)) {
         setValidToken(true);
+        setButtonEnabled(true); // Ensure button is enabled if token is valid
       } else {
         sessionStorage.removeItem("validToken");
         sessionStorage.removeItem("validTokenExpiration");
@@ -30,7 +31,7 @@ export default function HomePage() {
         setTimeLeft(remainingTime);
       } else {
         sessionStorage.removeItem("timer");
-        setButtonEnabled(true); // Enable button if timer is already expired
+        setButtonEnabled(true); // Ensure button enables if timer expired
       }
     } else {
       // Start the timer if it doesn't exist
@@ -54,10 +55,10 @@ export default function HomePage() {
             sessionStorage.setItem("validToken", "true");
             sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
             sessionStorage.removeItem("timer");
-            setButtonEnabled(true); // Ensure button enables after 15s
+            setButtonEnabled(true);
             return null;
           }
-          sessionStorage.setItem("timer", Math.floor(Date.now() / 1000) + prev - 1); // Keep session updated
+          sessionStorage.setItem("timer", Math.floor(Date.now() / 1000) + prev - 1);
           return prev - 1;
         });
       }, 1000);
