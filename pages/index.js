@@ -12,7 +12,7 @@ export default function HomePage() {
   const checkTokenValidity = () => {
     const storedValidToken = localStorage.getItem("validToken");
     const storedExpirationTime = localStorage.getItem("validTokenExpiration");
-    
+
     if (storedValidToken === "true" && storedExpirationTime) {
       if (Date.now() < parseInt(storedExpirationTime)) {
         setValidToken(true);
@@ -34,7 +34,6 @@ export default function HomePage() {
     };
 
     window.addEventListener("storage", handleStorageChange);
-    
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
@@ -44,19 +43,17 @@ export default function HomePage() {
     if (timer !== null && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => {
-          if (prev > 0) {
-            const newTime = prev - 1;
-            return newTime;
+          if (prev > 1) {
+            return prev - 1;
           } else {
             clearInterval(interval);
+            setValidToken(true);
+            localStorage.setItem("validToken", "true");
+            localStorage.setItem("validTokenExpiration", Date.now() + 60000); // 1 min expiry
             return 0;
           }
         });
       }, 1000);
-    } else if (timer === 0) {
-      setValidToken(true);
-      localStorage.setItem("validToken", "true");
-      localStorage.setItem("validTokenExpiration", Date.now() + 60000); // Token expires in 1 min
     }
 
     return () => clearInterval(interval);
@@ -64,17 +61,16 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      localStorage.removeItem("timer"); // Remove timer on close
+      setTimer(null); // Stop the timer when the app closes
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-    
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   const handleVerifyClick = () => {
-    setTimer(15);
-    router.push("/verify");
+    setTimer(15); // Always start from 15 seconds
+    router.push("/verify"); // Redirect to verify.js
   };
 
   return (
