@@ -1,42 +1,28 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import { FcApproval } from "react-icons/fc";
+import { useEffect, useState } from "react";
 
-export default function VerifyPage() {
+export default function Verify() {
+  const [countdown, setCountdown] = useState(15); // Timer starts from 15 seconds
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [timer, setTimer] = useState(15); // Start timer at 15 seconds
-  const router = useRouter();
 
-  // Handle automatic API call when 5 seconds are left
   useEffect(() => {
-    let interval;
-    if (timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    } else {
-      clearInterval(interval);
-      localStorage.setItem("timer", 0); // Set timer to 0 to enable the button in index.js
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
     }
 
-    return () => clearInterval(interval);
-  }, [timer]);
-
-  // Automatically call API at 5 seconds left
-  useEffect(() => {
-    if (timer === 5) {
-      handleVerification(); // API call when 5 seconds are left
+    // When countdown reaches 5 seconds, call API
+    if (countdown === 5) {
+      handleVerification();
     }
-  }, [timer]);
+  }, [countdown]);
 
   const handleVerification = async () => {
     setIsVerifying(true);
     setErrorMessage("");
 
-    // Replace with your actual GPLinks API token and callback URL
-    const apiToken = "e5bf7301b4ad442d45481de99fd656a182ec6507";
-    const callbackUrl = "https://injured-harriet-cinema-talkies-87f4a1d2.koyeb.app/verification-success/"; // The URL where verification success will occur
+    const apiToken = "e5bf7301b4ad442d45481de99fd656a182ec6507"; // Your API token
+    const callbackUrl = "https://injured-harriet-cinema-talkies-87f4a1d2.koyeb.app/verification-success/";
     const apiUrl = `https://api.gplinks.com/api?api=${apiToken}&url=${encodeURIComponent(callbackUrl)}`;
 
     try {
@@ -45,8 +31,16 @@ export default function VerifyPage() {
       const result = await response.json();
 
       if (result.status === "success" && result.shortenedUrl) {
-        // Open the verification URL in a new tab
-        window.open(result.shortenedUrl, "_blank");
+        // Open verification link in a full-screen popup
+        const newWindow = window.open(
+          result.shortenedUrl,
+          "_blank",
+          "fullscreen=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no"
+        );
+
+        if (!newWindow) {
+          throw new Error("Popup blocked! Allow popups in browser settings.");
+        }
       } else {
         throw new Error(result.message || "Verification failed.");
       }
@@ -57,21 +51,21 @@ export default function VerifyPage() {
   };
 
   return (
-    <div className="verificationContainer">
-      <div className="verificationBox">
-        <h2>Verify Your Access</h2>
-        <p>Click the button below to verify yourself and gain access.</p>
+    <div className="verify-container">
+      <h2>Verification Process</h2>
+      <p>Time Remaining: {countdown} seconds</p>
 
-        {errorMessage && <p className="error">{errorMessage}</p>}
-
-        <button onClick={handleVerification} disabled={isVerifying || timer <= 0} className="verifyButton">
-          <FcApproval className="icon1" />
-          {isVerifying ? "Verifying..." : "Verify Now"}
+      {countdown === 0 ? (
+        <button className="visit-btn" disabled={!isVerifying}>
+          Visit Site
         </button>
+      ) : (
+        <button className="gpverify-btn" disabled={countdown > 5} onClick={handleVerification}>
+          {isVerifying ? "Verifying..." : "GP Verify"}
+        </button>
+      )}
 
-        <p>Time left: {timer} seconds</p>
-        <p>After verification, you will be redirected back automatically.</p>
-      </div>
+      {errorMessage && <p className="error">{errorMessage}</p>}
     </div>
   );
 }
