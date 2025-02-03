@@ -5,73 +5,68 @@ import Link from "next/link";
 export default function HomePage() {
   const [validToken, setValidToken] = useState(false);
   const [checkingToken, setCheckingToken] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(null);
-  const [buttonEnabled, setButtonEnabled] = useState(false);
+  const [timer, setTimer] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const storedValidToken = sessionStorage.getItem("validToken");
-    const storedExpirationTime = sessionStorage.getItem("validTokenExpiration");
-    const storedTimer = sessionStorage.getItem("timer");
+  // Function to check token validity
+  const checkTokenValidity = () => {
+    const storedValidToken = localStorage.getItem("validToken");
+    const storedExpirationTime = localStorage.getItem("validTokenExpiration");
+    const storedTimer = localStorage.getItem("timer");
 
     if (storedValidToken === "true" && storedExpirationTime) {
       if (Date.now() < parseInt(storedExpirationTime)) {
         setValidToken(true);
-        setButtonEnabled(true); // Ensure button is enabled if token is valid
       } else {
-        sessionStorage.removeItem("validToken");
-        sessionStorage.removeItem("validTokenExpiration");
+        localStorage.removeItem("validToken");
+        localStorage.removeItem("validTokenExpiration");
         setValidToken(false);
       }
     }
 
     if (storedTimer) {
-      const remainingTime = parseInt(storedTimer) - Math.floor(Date.now() / 1000);
-      if (remainingTime > 0) {
-        setTimeLeft(remainingTime);
-      } else {
-        sessionStorage.removeItem("timer");
-        setButtonEnabled(true); // Ensure button enables if timer expired
-      }
-    } else {
-      // Start the timer if it doesn't exist
-      const countdownTime = 15;
-      const expirationTimestamp = Math.floor(Date.now() / 1000) + countdownTime;
-      sessionStorage.setItem("timer", expirationTimestamp);
-      setTimeLeft(countdownTime);
+      setTimer(parseInt(storedTimer));
     }
 
     setCheckingToken(false);
+  };
+
+  useEffect(() => {
+    checkTokenValidity();
+
+    const handleStorageChange = () => {
+      checkTokenValidity();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
     let interval;
-    if (timeLeft !== null && timeLeft > 0) {
+    if (timer !== null && timer > 0) {
       interval = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            setValidToken(true);
-            sessionStorage.setItem("validToken", "true");
-            sessionStorage.setItem("validTokenExpiration", Date.now() + 60000);
-            sessionStorage.removeItem("timer");
-            setButtonEnabled(true);
-            return null;
-          }
-          sessionStorage.setItem("timer", Math.floor(Date.now() / 1000) + prev - 1);
-          return prev - 1;
+        setTimer((prev) => {
+          const newTime = prev - 1;
+          localStorage.setItem("timer", newTime);
+          return newTime;
         });
       }, 1000);
+    } else if (timer === 0) {
+      setValidToken(true);
+      localStorage.setItem("validToken", "true");
+      localStorage.setItem("validTokenExpiration", Date.now() + 60000); // Set token expiry (1 min for demo)
+      localStorage.removeItem("timer");
     }
 
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, [timer]);
 
-  useEffect(() => {
-    if (timeLeft !== null && timeLeft === 5) {
-      router.push("/verify");
-    }
-  }, [timeLeft, router]);
+  const handleVerifyClick = () => {
+    localStorage.setItem("timer", 15);
+    setTimer(15);
+    router.push("/verify"); // Redirect to verify.js
+  };
 
   return (
     <div className="container">
@@ -79,13 +74,18 @@ export default function HomePage() {
         <p>Checking token...</p>
       ) : (
         <>
-          {!validToken && <p>Please wait, redirecting to verification in {timeLeft} seconds...</p>}
+          {!validToken && (
+            <>
+              <button onClick={handleVerifyClick} className="verifyButton">
+                Verify Now
+              </button>
+              {timer !== null && timer > 0 && <p>Time left: {timer} seconds</p>}
+            </>
+          )}
 
           {validToken && (
             <Link href="/index1">
-              <button className="visitButton" disabled={!buttonEnabled}>
-                Visit HomePage
-              </button>
+              <button className="visitButton">Visit HomePage</button>
             </Link>
           )}
         </>
