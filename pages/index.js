@@ -12,8 +12,7 @@ export default function HomePage() {
   const checkTokenValidity = () => {
     const storedValidToken = localStorage.getItem("validToken");
     const storedExpirationTime = localStorage.getItem("validTokenExpiration");
-    const storedTimer = localStorage.getItem("timer");
-
+    
     if (storedValidToken === "true" && storedExpirationTime) {
       if (Date.now() < parseInt(storedExpirationTime)) {
         setValidToken(true);
@@ -22,10 +21,6 @@ export default function HomePage() {
         localStorage.removeItem("validTokenExpiration");
         setValidToken(false);
       }
-    }
-
-    if (storedTimer) {
-      setTimer(parseInt(storedTimer));
     }
 
     setCheckingToken(false);
@@ -39,33 +34,47 @@ export default function HomePage() {
     };
 
     window.addEventListener("storage", handleStorageChange);
+    
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
     let interval;
+
     if (timer !== null && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => {
-          const newTime = prev - 1;
-          localStorage.setItem("timer", newTime);
-          return newTime;
+          if (prev > 0) {
+            const newTime = prev - 1;
+            return newTime;
+          } else {
+            clearInterval(interval);
+            return 0;
+          }
         });
       }, 1000);
     } else if (timer === 0) {
       setValidToken(true);
       localStorage.setItem("validToken", "true");
-      localStorage.setItem("validTokenExpiration", Date.now() + 60000); // Set token expiry (1 min for demo)
-      localStorage.removeItem("timer");
+      localStorage.setItem("validTokenExpiration", Date.now() + 60000); // Token expires in 1 min
     }
 
     return () => clearInterval(interval);
   }, [timer]);
 
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.removeItem("timer"); // Remove timer on close
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
   const handleVerifyClick = () => {
-    localStorage.setItem("timer", 15);
     setTimer(15);
-    router.push("/verify"); // Redirect to verify.js
+    router.push("/verify");
   };
 
   return (
